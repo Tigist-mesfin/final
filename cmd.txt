@@ -21,6 +21,8 @@ source venv/Scripts/activate
   git init
   git add .
   git commit -m " Added frontend and backend"
+  #for the first time  add this step#
+  git remote add origin https://github.com/Tigist-mesfin/final.git
   git push -u origin main
 
 
