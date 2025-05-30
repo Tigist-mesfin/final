@@ -1,0 +1,136 @@
+from flask_bcrypt import check_password_hash
+from datetime import datetime, timezone
+from nlp import db, login_manager
+from flask_login import UserMixin
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+    
+
+class User(db.Model,UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+    email = db.Column(db.String(80), unique=True)
+    dpt = db.Column(db.String(80))
+    password = db.Column(db.String(80))
+    is_student = db.Column(db.Boolean, default=False)
+    is_dpthead = db.Column(db.Boolean, default=False)
+    is_adviser = db.Column(db.Boolean, default=False)
+
+    def __init__(self, name, email,  dpt, password, is_student=False, is_dpthead=True,is_adviser=False):
+        self.name = name
+        self.email = email
+        self.dpt =dpt
+        self.password = password
+        self.is_student = is_student
+        self.is_dpthead = is_dpthead
+        self.is_adviser =is_adviser
+      
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+    
+    def update_dpthead_status(self, is_dpthead):
+        self.is_dpthead = is_dpthead
+        db.session.commit()
+
+class Student(User):
+    studid = db.Column(db.Integer, unique=True)
+    year = db.Column(db.Integer)
+    is_grouped = db.Column(db.Boolean, default=False)
+    group_id = db.Column(db.String(100))
+
+    def __init__(self, name, email,  dpt, password, studid, year, is_grouped=False, group_id=None):
+        super().__init__(name, email, dpt, password, is_student=True,is_dpthead=False)
+        self.studid = studid
+        self.year = year
+        self.is_grouped = is_grouped
+        self.group_id = group_id
+
+    def update_isgrpd_status_and_gr_id(self, is_grouped, group_id):
+        self.is_grouped = is_grouped
+        self.group_id = group_id
+        db.session.commit()
+ 
+class Adviser(User):
+    special_in = db.Column(db.String(80))
+
+    def __init__(self, name, email,dpt,password, special_in):
+        super().__init__(name, email,dpt, password, is_adviser=True,is_dpthead=False)
+        self.special_in = special_in
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ####################
+
+
+        #backend\mainapp\__init__.py
+from flask import Flask
+from mainapp.config import Config
+from flask_bcrypt import Bcrypt
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from flask_migrate import Migrate
+from flask_cors import CORS
+
+
+print("CORS imported successfully") 
+
+db = SQLAlchemy()
+bcrypt = Bcrypt()
+login_manager = LoginManager()
+login_manager.login_message_category = 'info'
+migrate = Migrate()
+
+def create_app(config_class=Config):
+    app = Flask(__name__,  static_folder='static')
+    app.config.from_object(config_class)
+    CORS(app, supports_credentials=True)
+
+    
+    # Initialize extensions with app context
+    db.init_app(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
+    migrate.init_app(app, db)  # Set up Flask-Migrate with app and db
+
+    
+
+    # Import and register blueprints
+    from mainapp.controllers.auth.route import auth
+    app.register_blueprint(auth)
+   
+
+    from mainapp.controllers.admin.project import project
+    app.register_blueprint(project)
+
+    from mainapp.controllers.admin.employee import site_contractor
+    app.register_blueprint(site_contractor)
+
+    from mainapp.controllers.admin.client import client
+    app.register_blueprint(client)
+
+    from mainapp.controllers.admin.customer import customer
+    app.register_blueprint(customer)
+
+    from mainapp.controllers.site_contructor.employee2 import employee
+    app.register_blueprint(employee)
+
+    from mainapp.controllers.site_contructor.material import material
+    app.register_blueprint(material)
+
+    from mainapp.controllers.site_contructor.project_progress import project_progress
+    app.register_blueprint(project_progress)
+
+
+    return app

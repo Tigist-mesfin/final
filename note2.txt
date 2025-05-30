@@ -1,0 +1,1153 @@
+
+# from flask import Blueprint, request, jsonify, Flask, current_app
+# from mainapp import db
+# from mainapp.models import ProjectProgress, ProjectProgressImage
+# from flask_login import login_required, current_user
+# from datetime import datetime
+# import os
+# from werkzeug.utils import secure_filename
+# from flask import send_from_directory
+
+# # Define Blueprint for project management with a URL prefix
+# project_progress = Blueprint('project_progress', __name__)
+
+
+
+
+
+
+
+# @project_progress.route('/project_progress/create_project_progress', methods=['POST'])
+# def create_project_progress():
+#     try:
+#         # Get form data
+#         description = request.form.get('description')
+#         status = request.form.get('status')
+#         p_id = request.form.get('p_id')
+#         site_cont_id = request.form.get('site_cont_id')
+#         phase1 = request.form.get('phase1') == 'true'
+#         phase2 = request.form.get('phase2') == 'true'
+#         phase3 = request.form.get('phase3') == 'true'
+#         updated_at_str = request.form.get('updated_at')
+
+#         # Validate required fields
+#         if not all([status, p_id, updated_at_str]):
+#             return jsonify({"error": "Missing required fields"}), 400
+
+#         # Create progress record
+#         new_progress = ProjectProgress(
+#             description=description,
+#             status=status,
+#             phase1=phase1,
+#             phase2=phase2,
+#             phase3=phase3,
+#             p_id=p_id,
+#             site_cont_id=site_cont_id,
+#             updated_at=datetime.strptime(updated_at_str, "%Y-%m-%d")
+#         )
+#         db.session.add(new_progress)
+#         db.session.flush()
+
+#         # Handle image uploads
+#         if 'images' in request.files:
+#             for image in request.files.getlist('images'):
+#                 if image and image.filename:
+#                     filename = secure_filename(image.filename)
+#                     filepath = os.path.join(UPLOAD_FOLDER, filename)
+#                     image.save(filepath)
+                    
+#                 db.session.add(ProjectProgressImage(
+#                 image_url=f"/static/project_progress_images/{filename}",  # Changed from /project_progress_images/
+#                 p_progres_id=new_progress.id
+# ))
+
+#         db.session.commit()
+#         return jsonify({"message": "Progress saved successfully!"}), 201
+
+#     except Exception as e:
+#         db.session.rollback()
+#         print("Error occurred:", e)
+#         return jsonify({"error": "Failed to save progress"}), 500
+
+# @project_progress.route('/project_progress/get_project_progress', methods=['GET'])
+# def get_project_progress():
+#     try:
+#         project_progress = ProjectProgress.query.all()
+#         results = []
+
+#         for progress in project_progress:
+#             images = ProjectProgressImage.query.filter_by(p_progres_id=progress.id).all()
+#             image_data = [{"id": img.id, "url": img.image_url} for img in images]
+
+#             results.append({
+#                 "id": progress.id,
+#                 "description": progress.description,
+#                 "status": progress.status,
+#                 "phase1": progress.phase1,
+#                 "phase2": progress.phase2,
+#                 "phase3": progress.phase3,
+#                 "p_id": progress.p_id,
+#                 "site_cont_id": progress.site_cont_id,
+#                 "updated_at": progress.updated_at.strftime("%Y-%m-%d"),
+#                 "images": image_data 
+#             })
+
+#         return jsonify(results), 200
+
+#     except Exception as e:
+#         print("Error fetching progress data:", e)
+#         return jsonify({"error": "Failed to fetch progress data"}), 500
+
+# @project_progress.route('/project_progress/update_project_progress/<int:id>', methods=['PUT'])
+# def update_project_progress(id):
+#     try:
+#         progress = ProjectProgress.query.get(id)
+#         if not progress:
+#             return jsonify({"error": "Project progress not found"}), 404
+
+#         # Handle regular fields from form
+#         progress.description = request.form.get('description', progress.description)
+#         progress.status = request.form.get('status', progress.status)
+#         progress.phase1 = request.form.get('phase1') == 'true' if request.form.get('phase1') is not None else progress.phase1
+#         progress.phase2 = request.form.get('phase2') == 'true' if request.form.get('phase2') is not None else progress.phase2
+#         progress.phase3 = request.form.get('phase3') == 'true' if request.form.get('phase3') is not None else progress.phase3
+#         progress.p_id = request.form.get('p_id', progress.p_id)
+#         progress.site_cont_id = request.form.get('site_cont_id', progress.site_cont_id)
+
+#         if request.form.get('updated_at'):
+#             try:
+#                 progress.updated_at = datetime.strptime(request.form['updated_at'], "%Y-%m-%d")
+#             except ValueError:
+#                 return jsonify({"error": "Invalid date format for updated_at"}), 400
+
+#         # Handle deletion of images
+#         delete_ids = request.form.getlist('delete_image_ids')
+#         if delete_ids:
+#             for img_id in delete_ids:
+#                 img = ProjectProgressImage.query.get(int(img_id))
+#                 if img:
+#                     # Delete file from disk
+#                     filename = os.path.basename(img.image_url)
+#                     filepath = os.path.join(UPLOAD_FOLDER, filename)
+#                     if os.path.exists(filepath):
+#                         os.remove(filepath)
+#                     db.session.delete(img)
+
+#         # Handle adding new images
+#         if 'images' in request.files:
+#             for image in request.files.getlist('images'):
+#                 if image and image.filename:
+#                     filename = secure_filename(image.filename)
+#                     filepath = os.path.join(UPLOAD_FOLDER, filename)
+#                     image.save(filepath)
+
+#                     db.session.add(ProjectProgressImage(
+#                     image_url=f"/static/project_progress_images/{filename}",  # Changed from /project_progress_images/
+#                     p_progres_id=progress.id
+# ))
+
+#         db.session.commit()
+#         return jsonify({"message": "Project progress updated successfully"}), 200
+
+#     except Exception as e:
+#         db.session.rollback()
+#         print("Update error:", e)
+#         return jsonify({"error": "Failed to update project progress"}), 500
+
+# @project_progress.route('/project_progress/delete_project_progress/<int:id>', methods=['DELETE'])
+# def delete_project_progress(id):
+#     try:
+#         progress = ProjectProgress.query.get(id)
+#         if not progress:
+#             return jsonify({"error": "Project progress not found"}), 404
+
+#         # Delete associated images from disk and DB
+#         images = ProjectProgressImage.query.filter_by(p_progres_id=progress.id).all()
+#         for img in images:
+#             filename = os.path.basename(img.image_url)
+#             filepath = os.path.join(UPLOAD_FOLDER, filename)
+#             if os.path.exists(filepath):
+#                 os.remove(filepath)
+#             db.session.delete(img)
+
+#         # Delete the project progress entry
+#         db.session.delete(progress)
+#         db.session.commit()
+
+#         return jsonify({"message": "Project progress deleted successfully"}), 200
+
+#     except Exception as e:
+#         db.session.rollback()
+#         print("Delete error:", e)
+#         return jsonify({"error": "Failed to delete project progress"}), 500
+
+
+
+
+###############
+
+from flask import Blueprint, request, jsonify, Flask, current_app
+from mainapp import db
+from mainapp.models import ProjectProgress, ProjectProgressImage
+from flask_login import login_required, current_user
+from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
+from flask import send_from_directory
+
+# Define Blueprint for project management with a URL prefix
+project_progress = Blueprint('project_progress', __name__)
+
+# Configure upload folder
+UPLOAD_FOLDER = os.path.join('static', 'project_progress_images')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+@project_progress.route('/static/project_progress_images/<filename>')
+def serve_progress_image(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+
+
+
+@project_progress.route('/debug_images')
+def debug_images():
+    import os
+    files = os.listdir(UPLOAD_FOLDER)
+    return jsonify({"files": files, "upload_folder": UPLOAD_FOLDER})
+
+
+
+
+@project_progress.route('/project_progress/create_project_progress', methods=['POST'])
+def create_project_progress():
+    try:
+        # Get form data
+        description = request.form.get('description')
+        status = request.form.get('status')
+        p_id = request.form.get('p_id')
+        site_cont_id = request.form.get('site_cont_id')
+        phase1 = request.form.get('phase1') == 'true'
+        phase2 = request.form.get('phase2') == 'true'
+        phase3 = request.form.get('phase3') == 'true'
+        updated_at_str = request.form.get('updated_at')
+
+        # Validate required fields
+        if not all([status, p_id, updated_at_str]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Create progress record
+        new_progress = ProjectProgress(
+            description=description,
+            status=status,
+            phase1=phase1,
+            phase2=phase2,
+            phase3=phase3,
+            p_id=p_id,
+            site_cont_id=site_cont_id,
+            updated_at=datetime.strptime(updated_at_str, "%Y-%m-%d")
+        )
+        db.session.add(new_progress)
+        db.session.flush()
+
+        # Handle image uploads
+        if 'images' in request.files:
+            for image in request.files.getlist('images'):
+                if image and image.filename:
+                    filename = secure_filename(image.filename)
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    image.save(filepath)
+                    
+                    db.session.add(ProjectProgressImage(
+                        image_url=f"/project_progress_images/{filename}",
+                        p_progres_id=new_progress.id
+                    ))
+
+        db.session.commit()
+        return jsonify({"message": "Progress saved successfully!"}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error occurred:", e)
+        return jsonify({"error": "Failed to save progress"}), 500
+
+@project_progress.route('/project_progress/get_project_progress', methods=['GET'])
+def get_project_progress():
+    try:
+        project_progress = ProjectProgress.query.all()
+        results = []
+
+        for progress in project_progress:
+            images = ProjectProgressImage.query.filter_by(p_progres_id=progress.id).all()
+            image_data = [{"id": img.id, "url": img.image_url} for img in images]
+
+            results.append({
+                "id": progress.id,
+                "description": progress.description,
+                "status": progress.status,
+                "phase1": progress.phase1,
+                "phase2": progress.phase2,
+                "phase3": progress.phase3,
+                "p_id": progress.p_id,
+                "site_cont_id": progress.site_cont_id,
+                "updated_at": progress.updated_at.strftime("%Y-%m-%d"),
+                "images": image_data 
+            })
+
+        return jsonify(results), 200
+
+    except Exception as e:
+        print("Error fetching progress data:", e)
+        return jsonify({"error": "Failed to fetch progress data"}), 500
+
+@project_progress.route('/project_progress/update_project_progress/<int:id>', methods=['PUT'])
+def update_project_progress(id):
+    try:
+        progress = ProjectProgress.query.get(id)
+        if not progress:
+            return jsonify({"error": "Project progress not found"}), 404
+
+        # Handle regular fields from form
+        progress.description = request.form.get('description', progress.description)
+        progress.status = request.form.get('status', progress.status)
+        progress.phase1 = request.form.get('phase1') == 'true' if request.form.get('phase1') is not None else progress.phase1
+        progress.phase2 = request.form.get('phase2') == 'true' if request.form.get('phase2') is not None else progress.phase2
+        progress.phase3 = request.form.get('phase3') == 'true' if request.form.get('phase3') is not None else progress.phase3
+        progress.p_id = request.form.get('p_id', progress.p_id)
+        progress.site_cont_id = request.form.get('site_cont_id', progress.site_cont_id)
+
+        if request.form.get('updated_at'):
+            try:
+                progress.updated_at = datetime.strptime(request.form['updated_at'], "%Y-%m-%d")
+            except ValueError:
+                return jsonify({"error": "Invalid date format for updated_at"}), 400
+
+        # Handle deletion of images
+        delete_ids = request.form.getlist('delete_image_ids')
+        if delete_ids:
+            for img_id in delete_ids:
+                img = ProjectProgressImage.query.get(int(img_id))
+                if img:
+                    # Delete file from disk
+                    filename = os.path.basename(img.image_url)
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    if os.path.exists(filepath):
+                        os.remove(filepath)
+                    db.session.delete(img)
+
+        # Handle adding new images
+        if 'images' in request.files:
+            for image in request.files.getlist('images'):
+                if image and image.filename:
+                    filename = secure_filename(image.filename)
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    image.save(filepath)
+
+                    db.session.add(ProjectProgressImage(
+                      image_url=f"/project_progress_images/{filename}",
+                        p_progres_id=progress.id
+                    ))
+
+        db.session.commit()
+        return jsonify({"message": "Project progress updated successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print("Update error:", e)
+        return jsonify({"error": "Failed to update project progress"}), 500
+
+@project_progress.route('/project_progress/delete_project_progress/<int:id>', methods=['DELETE'])
+def delete_project_progress(id):
+    try:
+        progress = ProjectProgress.query.get(id)
+        if not progress:
+            return jsonify({"error": "Project progress not found"}), 404
+
+        # Delete associated images from disk and DB
+        images = ProjectProgressImage.query.filter_by(p_progres_id=progress.id).all()
+        for img in images:
+            filename = os.path.basename(img.image_url)
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            db.session.delete(img)
+
+        # Delete the project progress entry
+        db.session.delete(progress)
+        db.session.commit()
+
+        return jsonify({"message": "Project progress deleted successfully"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print("Delete error:", e)
+        return jsonify({"error": "Failed to delete project progress"}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ###############################
+        #backend\mainapp\__init__.py
+from flask import Flask
+from mainapp.config import Config
+from flask_bcrypt import Bcrypt
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from flask_migrate import Migrate
+from flask_cors import CORS
+
+
+print("CORS imported successfully") 
+
+db = SQLAlchemy()
+bcrypt = Bcrypt()
+login_manager = LoginManager()
+login_manager.login_message_category = 'info'
+migrate = Migrate()
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    CORS(app, supports_credentials=True)
+
+    
+    # Initialize extensions with app context
+    db.init_app(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
+    migrate.init_app(app, db)  # Set up Flask-Migrate with app and db
+
+    
+
+    # Import and register blueprints
+    from mainapp.controllers.auth.route import auth
+    app.register_blueprint(auth)
+   
+
+    from mainapp.controllers.admin.project import project
+    app.register_blueprint(project)
+
+    from mainapp.controllers.admin.employee import site_contractor
+    app.register_blueprint(site_contractor)
+
+    from mainapp.controllers.admin.client import client
+    app.register_blueprint(client)
+
+    from mainapp.controllers.admin.customer import customer
+    app.register_blueprint(customer)
+
+    from mainapp.controllers.site_contructor.employee2 import employee
+    app.register_blueprint(employee)
+
+    from mainapp.controllers.site_contructor.material import material
+    app.register_blueprint(material)
+
+    from mainapp.controllers.site_contructor.project_progress import project_progress
+    app.register_blueprint(project_progress)
+
+
+    return app
+
+
+
+
+
+
+    #######################
+
+
+
+
+
+    import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Edit, Trash, Check, X } from 'lucide-react';
+
+const SeeProjectList = () => {
+    const [projects, setProjects] = useState([]);
+    const [editId, setEditId] = useState(null);
+    const [editedData, setEditedData] = useState({});
+    const [errorMessage, setErrorMessage] = useState('');
+    const [selectedProject, setSelectedProject] = useState(null);
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/project_progress/get_project_progress');
+                if (!response.ok) throw new Error('Failed to fetch');
+                const data = await response.json();
+                setProjects(data || []);
+            } catch (error) {
+                console.error('Error fetching projects:', error);
+            }
+        };
+        fetchProjects();
+    }, []);
+
+    const handleEdit = (project) => {
+        setEditId(project.id);
+        setEditedData({ ...project });
+        setErrorMessage('');
+    };
+
+    const handleChange = (e, field) => {
+        setEditedData({ ...editedData, [field]: e.target.value });
+    };
+
+    const handleSave = async (id) => {
+        try {
+            setErrorMessage('');
+            const response = await fetch(`http://127.0.0.1:5000/project_progress/update_project_progress/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editedData),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                setErrorMessage(result.error || 'Update failed');
+                return;
+            }
+
+            setProjects(projects.map(proj => (proj.id === id ? { ...proj, ...editedData } : proj)));
+            setEditId(null);
+        } catch (error) {
+            console.error('Error saving projectprogres:', error);
+            setErrorMessage('An error occurred while saving.');
+        }
+    };
+
+    const handleCancel = () => {
+        setEditId(null);
+        setEditedData({});
+        setErrorMessage('');
+    };
+
+    
+
+    const handleDelete = async (id) => {
+        const isConfirmed = window.confirm("Are you sure you want to delete this project?");
+        if (!isConfirmed) return;
+
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/project_progress/delete_project_progress/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete project');
+            }
+
+            setProjects(projects.filter(proj => proj.id !== id));
+        } catch (error) {
+            console.error('Error deleting project:', error);
+        }
+    };
+
+
+
+
+
+    const handleShowImages = (project) => {
+        console.log("Selected project:", project);  // Check what's inside images
+        setSelectedProject(project);
+    };
+    
+    
+
+    return (
+        <div className="container mx-auto p-6">
+            
+            <h1 className="text-2xl font-bold mb-4">Project Progress List</h1>
+
+            <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-300 shadow-md rounded-lg">
+                    <thead className="bg-gray-200">
+                        <tr>
+                            <th className="py-2 px-4 border">ID</th>
+                            <th className="py-2 px-4 border">Description</th>
+                            <th className="py-2 px-4 border">Status</th>
+                            <th className="py-2 px-4 border">Phase 1</th>
+                            <th className="py-2 px-4 border">Phase 2</th>
+                            <th className="py-2 px-4 border">Phase 3</th>
+                            <th className="py-2 px-4 border">Project ID</th>
+                            <th className="py-2 px-4 border">Contractor ID</th>
+                            <th className="py-2 px-4 border">Updated At</th>
+                            <th className="py-2 px-4 border">Images</th>
+                            <th className="py-2 px-4 border">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {projects.length > 0 ? (
+                            projects.map((proj) => (
+                                <tr key={proj.id} className="hover:bg-gray-100">
+                                    <td className="py-2 px-4 border">{proj.id}</td>
+
+                                    {/* Description */}
+                                    <td className="py-2 px-4 border">
+                                        {editId === proj.id ? (
+                                            <input
+                                                type="text"
+                                                value={editedData.description || ''}
+                                                onChange={(e) => handleChange(e, 'description')}
+                                                className="border p-1 w-full"
+                                            />
+                                        ) : (
+                                            proj.description
+                                        )}
+                                    </td>
+
+                                    {/* Status */}
+                                    <td className="py-2 px-4 border">
+                                        {editId === proj.id ? (
+                                            <input
+                                                type="text"
+                                                value={editedData.status || ''}
+                                                onChange={(e) => handleChange(e, 'status')}
+                                                className="border p-1 w-full"
+                                            />
+                                        ) : (
+                                            proj.status
+                                        )}
+                                    </td>
+
+                                                            {/* Phase 1 */}
+                        <td className="py-2 px-4 border text-center">
+                            {editId === proj.id ? (
+                                <input
+                                    type="checkbox"
+                                    checked={editedData.phase1 || false}
+                                    onChange={(e) =>
+                                        setEditedData({ ...editedData, phase1: e.target.checked })
+                                    }
+                                />
+                            ) : (
+                                proj.phase1 ? '✔' : '✘'
+                            )}
+                        </td>
+
+                        {/* Phase 2 */}
+                        <td className="py-2 px-4 border text-center">
+                            {editId === proj.id ? (
+                                <input
+                                    type="checkbox"
+                                    checked={editedData.phase2 || false}
+                                    onChange={(e) =>
+                                        setEditedData({ ...editedData, phase2: e.target.checked })
+                                    }
+                                />
+                            ) : (
+                                proj.phase2 ? '✔' : '✘'
+                            )}
+                        </td>
+
+                        {/* Phase 3 */}
+                        <td className="py-2 px-4 border text-center">
+                            {editId === proj.id ? (
+                                <input
+                                    type="checkbox"
+                                    checked={editedData.phase3 || false}
+                                    onChange={(e) =>
+                                        setEditedData({ ...editedData, phase3: e.target.checked })
+                                    }
+                                />
+                            ) : (
+                                proj.phase3 ? '✔' : '✘'
+                            )}
+                        </td>
+
+                                    {/* p_id */}
+                                    <td className="py-1 px-1 border">
+                                        {editId === proj.id ? (
+                                            <input
+                                                type="number"
+                                                value={editedData.p_id || ''}
+                                                onChange={(e) => handleChange(e, 'p_id')}
+                                                className="border p-1 w-full"
+                                            />
+                                        ) : (
+                                            proj.p_id
+                                        )}
+                                    </td>
+
+                                    {/* site_cont_id */}
+                                    <td className="py-1 px-1 border">
+                                        {editId === proj.id ? (
+                                            <input
+                                                type="number"
+                                                value={editedData.site_cont_id || ''}
+                                                onChange={(e) => handleChange(e, 'site_cont_id')}
+                                                className="border p-1 w-full"
+                                            />
+                                        ) : (
+                                            proj.site_cont_id
+                                        )}
+                                    </td>
+                                                                        {/* Updated At */}
+                                    <td className="py-2 px-4 border">
+                                        {editId === proj.id ? (
+                                            <input
+                                                type="date"
+                                                value={editedData.updated_at || ''}
+                                                onChange={(e) => handleChange(e, 'updated_at')}
+                                                className="border p-1 w-full"
+                                            />
+                                        ) : (
+                                            proj.updated_at
+                                        )}
+                                    </td>
+
+
+                                    <td className="py-2 px-4 border text-center">
+                                        <button
+                                            onClick={() => handleShowImages(proj)}
+                                            className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
+                                        >
+                                            Show Images
+                                        </button>
+                                    </td>
+
+
+                                    {/* Actions */}
+                                    <td className="py-2 px-4 border">
+                                        <div className="flex space-x-2">
+                                            {editId === proj.id ? (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleSave(proj.id)}
+                                                        className="text-green-600 hover:text-green-800"
+                                                    >
+                                                        <Check className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancel}
+                                                        className="text-gray-600 hover:text-gray-800"
+                                                    >
+                                                        <X className="w-5 h-5" />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleEdit(proj)}
+                                                        className="text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        <Edit className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(proj.id)}
+                                                        className="text-red-600 hover:text-red-800"
+                                                    >
+                                                        <Trash className="w-5 h-5" />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </td>
+
+                                </tr>
+
+                                
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="11" className="text-center py-4">
+                                    No project progress records found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+
+                {errorMessage && (
+                    <div className="text-red-600 mt-4 text-sm">{errorMessage}</div>
+                )}
+            </div>
+
+            
+// In your return statement, update the image display part:
+{selectedProject && (
+    <div className="mt-6 border p-4 rounded bg-gray-100 shadow">
+        <h2 className="text-lg font-semibold mb-3">
+            Images for Project Progress ID: {selectedProject.id}
+        </h2>
+
+        {selectedProject.images && selectedProject.images.length > 0 ? (
+            <div className="flex gap-3 flex-wrap">
+                {selectedProject.images.map((img, index) => {
+                    // Extract filename from URL - handles both full URLs and paths
+                    const getFilename = (url) => {
+                        if (!url) return '';
+                        // Handle cases where URL might be full path or just filename
+                        return url.startsWith('/project_progress_images/') 
+                            ? url.split('/').pop()
+                            : url.startsWith('http') 
+                                ? url.split('/').pop()
+                                : url;
+                    };
+
+                    const filename = getFilename(img.url);
+                    const imageUrl = filename 
+                        ? `http://localhost:5000/project_progress_images/${filename}`
+                        : '';
+
+                    return (
+                        <div key={index} className="relative">
+                            <img
+                                src={imageUrl}
+                                alt={`Progress ${index + 1}`}
+                                className="w-72 h-72 object-cover rounded border"
+                                onError={(e) => {
+                                    console.error('Failed to load image:', img.url);
+                                    e.target.src = 'https://via.placeholder.com/288x288?text=Image+Not+Found';
+                                    e.target.onerror = null; // Prevent infinite loop
+                                }}
+                            />
+                        </div>
+                    );
+                })}
+            </div>
+        ) : (
+            <p>No images found for this project progress.</p>
+        )}
+    </div>
+)}
+
+        </div>
+    );
+};
+
+export default SeeProjectList;
+
+
+
+
+
+##################backend
+
+
+
+
+
+
+
+from flask import Blueprint, request, jsonify
+from werkzeug.utils import secure_filename
+from mainapp.models import db, ProjectProgress
+import os
+import time
+from datetime import datetime
+from werkzeug.utils import secure_filename
+from sqlalchemy.orm.attributes import flag_modified
+from flask import current_app
+
+
+
+progress_bp = Blueprint('progress', __name__)
+
+UPLOAD_FOLDER = '../frontend/public/assets/project_progress_images'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+# Ensure the upload directory exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@progress_bp.route('/api/progress', methods=['POST'])
+def submit_progress():
+    try:
+        # Get form data
+        description = request.form.get('description', '').strip()
+        status = request.form.get('status', '').strip()
+        phase1 = request.form.get('phase1') == 'true'
+        phase2 = request.form.get('phase2') == 'true'
+        phase3 = request.form.get('phase3') == 'true'
+        p_id = int(request.form.get('p_id'))
+        site_cont_id = int(request.form.get('site_cont_id'))
+        updated_at_str = request.form.get('updated_at')
+
+        if not all([description, status, updated_at_str]):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        # Save images and collect URLs
+        image_urls = []
+        if 'images' in request.files:
+            for image in request.files.getlist('images'):
+                if image and image.filename and allowed_file(image.filename):
+                    filename = secure_filename(image.filename)
+                    unique_filename = f"{int(time.time())}_{filename}"
+                    save_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+                    image.save(save_path)
+
+                    # React-relative path
+                    image_url = f"assets/project_progress_images/{unique_filename}"
+                    image_urls.append(image_url)
+
+        # Create progress record
+        new_progress = ProjectProgress(
+            description=description,
+            status=status,
+            phase1=phase1,
+            phase2=phase2,
+            phase3=phase3,
+            p_id=p_id,
+            site_cont_id=site_cont_id,
+            updated_at=datetime.strptime(updated_at_str, "%Y-%m-%d"),
+            image_urls=image_urls  # Store list directly
+        )
+
+        db.session.add(new_progress)
+        db.session.commit()
+
+        return jsonify({'message': 'Progress submitted successfully'}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Submission failed', 'details': str(e)}), 500
+
+
+
+
+@progress_bp.route('/api/get_progress', methods=['GET'])
+def get_progress():
+    try:
+        progress_list = ProjectProgress.query.all()
+
+        results = []
+        for progress in progress_list:
+            results.append({
+                'id': progress.id,
+                'description': progress.description,
+                'status': progress.status,
+                'phase1': progress.phase1,
+                'phase2': progress.phase2,
+                'phase3': progress.phase3,
+                'p_id': progress.p_id,
+                'site_cont_id': progress.site_cont_id,
+                'updated_at': progress.updated_at.strftime("%Y-%m-%d"),
+                'image_urls': progress.image_urls  # Assuming this is a list field
+            })
+
+        return jsonify(results), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Failed to fetch progress data', 'details': str(e)}), 500
+
+
+@progress_bp.route('/api/update_progress/<int:progress_id>', methods=['PUT'])
+def update_progress(progress_id):
+    try:
+        progress = ProjectProgress.query.get(progress_id)
+        if not progress:
+            return jsonify({'error': 'Progress not found'}), 404
+
+        # Get updated fields from form data
+        progress.description = request.form.get('description', progress.description)
+        progress.status = request.form.get('status', progress.status)
+        progress.phase1 = request.form.get('phase1') == 'true'
+        progress.phase2 = request.form.get('phase2') == 'true'
+        progress.phase3 = request.form.get('phase3') == 'true'
+        progress.p_id = int(request.form.get('p_id', progress.p_id))
+        progress.site_cont_id = int(request.form.get('site_cont_id', progress.site_cont_id))
+
+        updated_at_str = request.form.get('updated_at')
+        if updated_at_str:
+            progress.updated_at = datetime.strptime(updated_at_str, "%Y-%m-%d")
+
+        # Handle new image uploads (optional: clear old ones)
+        if 'images' in request.files:
+            # Optionally remove old images from disk
+            for url in progress.image_urls:
+                file_path = os.path.join('../frontend/public', url)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+
+            new_image_urls = []
+            for image in request.files.getlist('images'):
+                if image and image.filename and allowed_file(image.filename):
+                    filename = secure_filename(image.filename)
+                    unique_filename = f"{int(time.time())}_{filename}"
+                    save_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+                    image.save(save_path)
+
+                    image_url = f"assets/project_progress_images/{unique_filename}"
+                    new_image_urls.append(image_url)
+
+            progress.image_urls = new_image_urls
+
+        db.session.commit()
+        return jsonify({'message': 'Progress updated successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to update progress', 'details': str(e)}), 500
+
+
+
+
+
+
+@progress_bp.route('/api/delete_progress/<int:progress_id>', methods=['DELETE'])
+def delete_progress(progress_id):
+    try:
+        progress = ProjectProgress.query.get(progress_id)
+        if not progress:
+            return jsonify({'error': 'Progress not found'}), 404
+
+        # Optionally delete associated images from the filesystem
+        if progress.image_urls:
+            for url in progress.image_urls:
+                file_path = os.path.join('../frontend/public', url)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+
+        db.session.delete(progress)
+        db.session.commit()
+        return jsonify({'message': 'Progress deleted successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to delete progress', 'details': str(e)}), 500
+
+
+
+
+
+
+@progress_bp.route('/api/upload_progress_image/<int:progress_id>', methods=['POST'])
+def upload_progress_image(progress_id):
+    try:
+        progress = ProjectProgress.query.get(progress_id)
+        if not progress:
+            return jsonify({'error': 'Progress not found'}), 404
+
+        files = request.files.getlist('images')
+        if not files:
+            return jsonify({'error': 'No files uploaded'}), 400
+
+        saved_urls = []
+
+        # Get absolute path to frontend/public/assets/project_progress_images
+        frontend_folder = os.path.abspath(os.path.join(
+            current_app.root_path, '..', '..', 'frontend', 'public', 'assets', 'project_progress_images'
+        ))
+        os.makedirs(frontend_folder, exist_ok=True)
+
+        for file in files:
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                unique_filename = f"{int(time.time())}_{filename}"
+                save_path = os.path.join(frontend_folder, unique_filename)
+                file.save(save_path)
+
+                # Relative path from public folder for React access
+                file_url = f"assets/project_progress_images/{unique_filename}"
+                saved_urls.append(file_url)
+
+        # Update the progress record
+        progress.image_urls = (progress.image_urls or []) + saved_urls
+        flag_modified(progress, 'image_urls')  # Needed if image_urls is a JSON/array field
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Images uploaded successfully',
+            'new_images': saved_urls,
+            'all_images': progress.image_urls
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Upload failed', 'details': str(e)}), 500
+
+
+
+
+
+
+@progress_bp.route('/api/get_uploaded_images/<int:progress_id>', methods=['GET'])
+def get_uploaded_images(progress_id):
+    try:
+        progress = ProjectProgress.query.get(progress_id)
+        if not progress:
+            return jsonify({'error': 'Progress not found'}), 404
+
+        # Return the list of image URLs (can be empty)
+        return jsonify({
+            'progress_id': progress_id,
+            'images': progress.image_urls or []
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': 'Failed to retrieve images', 'details': str(e)}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@progress_bp.route('/api/delete_progress_image', methods=['DELETE'])
+def delete_progress_image():
+    try:
+        data = request.get_json()
+        progress_id = data.get('progress_id')
+        image_url = data.get('image_url')
+
+        if not all([progress_id, image_url]):
+            return jsonify({'error': 'progress_id and image_url required'}), 400
+
+        progress = ProjectProgress.query.get(progress_id)
+        if not progress:
+            return jsonify({'error': 'Progress entry not found'}), 404
+
+        # Match based on filename only
+        image_filename = os.path.basename(image_url)
+        current_images = progress.image_urls or []
+
+        if not any(os.path.basename(url) == image_filename for url in current_images):
+            return jsonify({'error': 'Image URL not found in progress'}), 404
+
+        # Remove image file from disk
+        file_path = os.path.join(UPLOAD_FOLDER, image_filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        # Remove the matching image URL from DB
+        updated_images = [url for url in current_images if os.path.basename(url) != image_filename]
+        progress.image_urls = updated_images
+        db.session.commit()
+
+        return jsonify({'message': 'Image deleted successfully', 'remaining_images': updated_images}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Delete failed', 'details': str(e)}), 500

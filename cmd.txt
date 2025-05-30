@@ -1,0 +1,37 @@
+HP@DESKTOP-S5ABQUO MINGW64 ~/Desktop/ctmapp
+source venv/Scripts/activate
+
+
+#sqlalchemy orm db cmd 
+  1. export FLASK_APP=run
+  echo $FLASK_APP
+
+  2. export FLASK_ENV=development
+  echo $FLASK_ENV
+  
+
+  # migrate cmd
+  ##flask db init// pass this step, do not use it
+  3. flask db migrate -m "your comment."
+  4. flask db upgrade
+
+
+  #    https://github.com/Tigist-mesfin/CTMAPP-MAIN.git
+  push to github
+  git init
+  git add .
+  git commit -m " Added frontend and backend"
+  git push -u origin main
+
+
+
+
+
+
+
+
+
+
+
+
+
