@@ -233,7 +233,6 @@ const handleDeleteImage = async (imgUrl, progressId) => {
                             <th className="py-2 px-4 border">Phase 2</th>
                             <th className="py-2 px-4 border">Phase 3</th>
                             <th className="py-2 px-4 border">Project ID</th>
-                            <th className="py-2 px-4 border">Contractor ID</th>
                             <th className="py-2 px-4 border">Date</th>
                             <th className="py-2 px-4 border">Images</th>
                             <th className="py-2 px-4 border">Actions</th>
@@ -332,19 +331,7 @@ const handleDeleteImage = async (imgUrl, progressId) => {
                                         )}
                                     </td>
 
-                                    {/* site_cont_id */}
-                                    <td className="py-1 px-1 border">
-                                        {editId === proj.id ? (
-                                            <input
-                                                type="number"
-                                                value={editedData.site_cont_id || ''}
-                                                onChange={(e) => handleChange(e, 'site_cont_id')}
-                                                className="border p-1 w-full"
-                                            />
-                                        ) : (
-                                            proj.site_cont_id
-                                        )}
-                                    </td>
+                                    
                                                                         {/* Updated At */}
                                     <td className="py-2 px-4 border">
                                         {editId === proj.id ? (

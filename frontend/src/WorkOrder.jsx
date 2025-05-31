@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, Mail, DollarSign, Hammer,Badge,  MapPin, Home, FileText, Clock, MessageCircle } from 'lucide-react';
+import { CheckCircle, Mail, DollarSign, Landmark, Hammer,Badge,  MapPin, Home, FileText, Clock, MessageCircle } from 'lucide-react';
 
 const WorkOrder = () => {
   const [approvedRequests, setApprovedRequests] = useState([]);
@@ -26,7 +26,7 @@ const WorkOrder = () => {
   }, []);
 
   return (
-    <div className=" grid p-8 w-full min-h-screen bg-gray-100 overflow-y-auto  max-h-screen">
+    <div className=" grid p-8  ml-24 w-full min-h-screen bg-gray-100 overflow-y-auto  max-h-screen">
         
       <h1 className="text-3xl font-bold text-sky-900 mb-6">Approved Work Orders</h1>
      <div className='grid grid-cols-2'>
@@ -41,10 +41,19 @@ const WorkOrder = () => {
               key={req.id}
               className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="text-green-600 w-5 h-5" />
-                <p className="font-semibold text-green-700">Approved</p>
-              </div>
+                <div className="flex items-center gap-2 mb-2">
+              <Landmark className="w-5 h-5 text-sky-900" />
+              <p>Project Name: {req.project?.p_name || 'No project name'}</p>
+            </div>
+                <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-5 h-5 text-sky-900" />
+                      <p> Project Description: {req.project?.description}</p>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="w-5 h-5 text-sky-900" />
+                      <p>Location: {req.project?.location}</p>
+                    </div>
+             
               <div className="text-black">
               <div className="flex items-center gap-2 mb-2">
                   <FileText className="w-5 h-5 text-sky-900" />
@@ -55,10 +64,7 @@ const WorkOrder = () => {
                   <p>Equipment machinery: {req.equipment_machinery} </p>
                 </div>
 
-                <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="w-5 h-5 text-sky-900" />
-                  <p>Location: {req.location}</p>
-                </div>
+             
 
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-5 h-5 text-sky-900" />
@@ -81,6 +87,10 @@ const WorkOrder = () => {
                   <MessageCircle className="w-5 h-5 text-sky-900" />
                   <p>Admin Reply: {req.AdminReply || 'No reply yet'}</p>
                 </div>
+                 <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="text-green-600 w-5 h-5" />
+                <p className="font-semibold text-green-700">Approved</p>
+              </div>
               </div>
               </div>
            

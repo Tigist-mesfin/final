@@ -224,6 +224,7 @@ useEffect(() => {
                         <option value="">Select Status</option>
                         <option value="In Progress">In Progress</option>
                         <option value="On Hold">On Hold</option>
+                        <option value="Cancelled">Cancelled</option>
                       
                     </select>
                 </div>

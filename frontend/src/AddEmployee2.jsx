@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect  } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Mail, Phone, Home, DollarSign, Hash, Building2, Briefcase } from 'lucide-react';
 
 const UserForm = () => {
     const navigate = useNavigate();
+    const [projects, setProjects] = useState([]);
     const [formData, setFormData] = useState({
         full_name: '',
         email: '',
@@ -11,7 +12,7 @@ const UserForm = () => {
         address: '',
         salary: '',
         p_id:'',
-        site_cont_id:'',
+        site_cont_id: localStorage.getItem("userId") || "",
         role: ''
     });
 
@@ -55,6 +56,26 @@ const UserForm = () => {
             alert('An error occurred. Please try again.');
         }
     };
+
+
+     useEffect(() => {
+                const userId = localStorage.getItem("userId");
+                if (!userId) return;
+    
+                const fetchProjects = async () => {
+                    try {
+                    const response = await fetch(`http://127.0.0.1:5000/api/get_projects_by_site_contr/${userId}`
+                    );
+                    const data = await response.json();
+                    setProjects(data);
+                    } catch (error) {
+                    console.error("Error fetching projects:", error);
+                    }
+                };
+    
+                fetchProjects();
+                }, []);
+
 
     return (
         <div>
@@ -108,16 +129,23 @@ const UserForm = () => {
                 <Hash className="h-4 w-4" />
                 p_id
                 </label>
-                <input type="number" name="p_id" value={formData.p_id} onChange={handleChange} step="0.01" className="input-style w-72" />
-            </div>
+                 <select
+                name="p_id"
+                value={formData.p_id}
+                onChange={handleChange}
+                className="input-style w-72"
+                required
+                >
+                <option value="">Select Project</option>
+                {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                    {project.name} (ID: {project.id})
+                    </option>
+                ))}
+                </select>
+           </div>
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700  items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                site_cont_id
-                </label>
-                <input type="number" name="site_cont_id" value={formData.site_cont_id} onChange={handleChange} step="0.01" className="input-style w-72" />
-            </div>
+           
 
             <div>
                 <label className="block text-sm font-medium text-gray-700  items-center gap-2">

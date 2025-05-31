@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const ProjectProgressForm = () => {
+    const [projects, setProjects] = useState([]);
     const [formData, setFormData] = useState({
         description: "",
         status: "",
@@ -8,7 +9,7 @@ const ProjectProgressForm = () => {
         phase2: false,
         phase3: false,
         p_id: "",
-        site_cont_id: "",
+        site_cont_id:  localStorage.getItem("userId") || "",
         updated_at: "",
         images: [],
     });
@@ -78,6 +79,27 @@ const ProjectProgressForm = () => {
         }
     };
 
+
+            useEffect(() => {
+            const userId = localStorage.getItem("userId");
+            if (!userId) return;
+
+            const fetchProjects = async () => {
+                try {
+                const response = await fetch(`http://127.0.0.1:5000/api/get_projects_by_site_contr/${userId}`
+                );
+                const data = await response.json();
+                setProjects(data);
+                } catch (error) {
+                console.error("Error fetching projects:", error);
+                }
+            };
+
+            fetchProjects();
+            }, []);
+
+
+
     return (
         <div>
             <h1 className="text-2xl font-bold pl-36 text-gray-800 mb-4">Project Progress Form</h1>
@@ -85,6 +107,21 @@ const ProjectProgressForm = () => {
                 onSubmit={handleSubmit}
                 className="border border-gray-400 ml-32 p-6 rounded-lg shadow-lg bg-slate-200 w-auto mt-1 lg:space-y-2 lg:pr-52 lg:pl-16"
             >
+             <select
+                name="p_id"
+                value={formData.p_id}
+                onChange={handleChange}
+                className="input-style w-72"
+                required
+                >
+                <option value="">Select Project</option>
+                {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                    {project.name} (ID: {project.id})
+                    </option>
+                ))}
+                </select>
+
                 {/* Description */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Description</label>
@@ -100,15 +137,15 @@ const ProjectProgressForm = () => {
 
                 {/* Status */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
-                    <input
-                        type="text"
-                        name="status"
-                        value={formData.status}
-                        onChange={handleChange}
-                        className="input-style w-72"
-                        required
-                    />
+                   <label className="block text-sm font-medium text-black">Status</label>
+                    <select name="status" value={formData.status} onChange={handleChange} className="input-style w-72" required>
+                        <option value="">Select Status</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="On Hold">On Hold</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                      
+                    </select>
                 </div>
 
                 {/* Phases Selection */}
@@ -123,8 +160,10 @@ const ProjectProgressForm = () => {
                                 onChange={handlePhaseChange}
                                 className="w-4 h-4"
                             />
-                            <span>Phase 1</span>
+                            <span>Phase 1: Foundation and Framing part is finished.</span>
                         </label>
+                        </div>
+                        <div>
                         <label className="flex items-center space-x-2">
                             <input
                                 type="checkbox"
@@ -133,8 +172,10 @@ const ProjectProgressForm = () => {
                                 onChange={handlePhaseChange}
                                 className="w-4 h-4"
                             />
-                            <span>Phase 2</span>
+                            <span>Phase 2: Plumbing part is finished</span>
                         </label>
+                        </div>
+                        <div>
                         <label className="flex items-center space-x-2">
                             <input
                                 type="checkbox"
@@ -143,35 +184,12 @@ const ProjectProgressForm = () => {
                                 onChange={handlePhaseChange}
                                 className="w-4 h-4"
                             />
-                            <span>Phase 3</span>
+                            <span>Phase 3: Interior and Exterior Finishing part is finished</span>
                         </label>
                     </div>
                 </div>
 
-                {/* Project ID & Site Contractor ID */}
-                <div className="flex flex-row gap-x-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Project ID</label>
-                        <input
-                            type="text"
-                            name="p_id"
-                            value={formData.p_id}
-                            onChange={handleChange}
-                            className="input-style w-72"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Site Contractor ID</label>
-                        <input
-                            type="text"
-                            name="site_cont_id"
-                            value={formData.site_cont_id}
-                            onChange={handleChange}
-                            className="input-style w-72"
-                        />
-                    </div>
-                </div>
+              
 
                 {/* Updated At */}
                 <div>

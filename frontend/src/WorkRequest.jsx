@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MessageCircle, Mail, DollarSign, MapPin, Home, FileText, Clock } from 'lucide-react';
+import { MessageCircle, Mail, DollarSign, MapPin, Home, FileText, Clock, Landmark } from 'lucide-react';
 
 const WorkRequest = () => {
 const [workRequests, setWorkRequests] = useState([]);
@@ -82,6 +82,19 @@ const [loading, setLoading] = useState(true);
               <div key={req.id} className="flex flex-row gap-16 bg-white shadow p-6 rounded-xl">
                 <div>
                   <h2 className="text-xl text-sky-950 font-bold  mb-2"> Work Request Details</h2>
+                
+                <div className="flex items-center gap-2 mb-2">
+                <Landmark className="w-5 h-5 text-sky-900" />
+                <p>Project Name: {req.project?.p_name || 'No project name'}</p>
+              </div>
+                  <div className="flex items-center gap-2 mb-2">
+                        <FileText className="w-5 h-5 text-sky-900" />
+                        <p> Project Description: {req.project?.description}</p>
+                      </div>
+                       <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="w-5 h-5 text-sky-900" />
+                        <p>Location: {req.project?.location}</p>
+                      </div>
                 <div className="flex items-center gap-2 mb-2">
                   <Mail className="w-5 h-5 text-sky-900" />
                   <p>Description of works: {req.description_of_works}</p>
@@ -91,11 +104,7 @@ const [loading, setLoading] = useState(true);
                   <p>Equipment machinery: {req.equipment_machinery} </p>
                 </div>
 
-                <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="w-5 h-5 text-sky-900" />
-                  <p>Location: {req.location}</p>
-                </div>
-
+               
                 <div className="flex items-center gap-2 mb-2">
                   <Home className="w-5 h-5 text-sky-900" />
                   <p>Date of inspection: {req.date_of_inspection}</p>

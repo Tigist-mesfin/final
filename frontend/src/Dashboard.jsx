@@ -230,7 +230,7 @@ useEffect(() => {
 
             {/* Badge for pending requests */}
             {pendingWorkRequestsCount > 0 && (
-              <span className="absolute top-0 right-0 bg-Hex4 text-black text-xs font-bold px-1 py-0 rounded-full transform translate-x-1/2 -translate-y-1/2">
+              <span className="absolute top-0 right-0 bg-red-400 text-white text-xs font-bold px-1 py-0 rounded-full transform translate-x-1/2 -translate-y-1/2">
                 {pendingWorkRequestsCount}
               </span>
             )}

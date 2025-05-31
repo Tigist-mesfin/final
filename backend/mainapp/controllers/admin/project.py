@@ -215,10 +215,16 @@ def get_client_project_progress(client_id):
                 'project_id': progress.p_id,
                 'site_contractor_id': progress.site_cont_id,
                 'updated_at': progress.updated_at.strftime("%Y-%m-%d") if progress.updated_at else None,
-                'image_urls': progress.image_urls
+                'image_urls': progress.image_urls,
+
+                'project_name': progress.project.p_name,
+                'project_description': progress.project.description,
+                'area': progress.project.Area,
+                'location': progress.project.location,
+                'type_of_building': progress.project.TypeOfBuilding,
             })
 
-        return jsonify(progress_list), 200
+            return jsonify(progress_list), 200
 
     except Exception as e:
         print(f"[ERROR] Failed to fetch project progress: {e}")
@@ -238,33 +244,50 @@ def get_client_project_progress(client_id):
 
 
 
-
-
-
 @project.route('/api/get_progress', methods=['GET'])
-def get_progress():
+def get_all_project_progress():
     try:
-        progress_list = ProjectProgress.query.all()
+        # Join ProjectProgress with Project on p_id = Project.id
+        results = db.session.query(ProjectProgress, Project)\
+            .join(Project, ProjectProgress.p_id == Project.id)\
+            .order_by(ProjectProgress.id.desc())\
+            .all()
 
-        results = []
-        for progress in progress_list:
-            results.append({
+        data = []
+        for progress, project in results:
+            data.append({
                 'id': progress.id,
                 'description': progress.description,
                 'status': progress.status,
+                'updated_at': progress.updated_at.strftime("%Y-%m-%d"),
                 'phase1': progress.phase1,
                 'phase2': progress.phase2,
                 'phase3': progress.phase3,
-                'p_id': progress.p_id,
-                'site_cont_id': progress.site_cont_id,
-                'updated_at': progress.updated_at.strftime("%Y-%m-%d"),
-                'image_urls': progress.image_urls
+                'image_urls': progress.image_urls if isinstance(progress.image_urls, list) else [],
+                'project': {
+                    'id': project.id,
+                    'name': project.p_name,
+                    'description': project.description,
+                    'location': project.location,
+                    'type_of_building': project.TypeOfBuilding,
+                    'area': project.Area
+                }
             })
 
-        return jsonify(results), 200
+        return jsonify(data), 200
 
     except Exception as e:
-        return jsonify({'error': 'Failed to fetch progress data', 'details': str(e)}), 500
+        db.session.rollback()
+        print("Error:", str(e))
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        db.session.close()
+
+
+
+
 
 
 
@@ -282,7 +305,7 @@ def submit_work_request():
         date_of_inspection = datetime.strptime(data['date_of_inspection'], "%Y-%m-%d").date()
         new_request = WorkRequest(
             id=data.get('id'),
-            location=data["location"],
+            p_id=data["p_id"],
             description_of_works=data["description_of_works"],
             equipment_machinery=data.get("equipment_machinery", ""),
             date_of_inspection=date_of_inspection,
@@ -309,30 +332,34 @@ def submit_work_request():
 @project.route('/api/work-requests', methods=['GET'])
 def get_all_requests():
     try:
-        requests = WorkRequest.query.order_by(WorkRequest.id.desc()).all()
+        # Join WorkRequest with Project on p_id = Project.id
+        requests = db.session.query(WorkRequest, Project).join(Project, WorkRequest.p_id == Project.id).order_by(WorkRequest.id.desc()).all()
+        
         data = []
-        for req in requests:
+        for req, p in requests:
             data.append({
                 'id': req.id,
                 'description_of_works': req.description_of_works,
                 'equipment_machinery': req.equipment_machinery,
-                'location': req.location,
+                'p_id': req.p_id,
                 'date_of_inspection': req.date_of_inspection,
-                'site_cont_id':req.site_cont_id,
+                'site_cont_id': req.site_cont_id,
                 'Status': req.Status,
-                'AdminReply': req.AdminReply
+                'AdminReply': req.AdminReply,
+                'project': {
+                    'p_name': p.p_name,
+                    'location': p.location,
+                    'description': p.description
+                }
             })
         return jsonify(data), 200
     except Exception as e:
         db.session.rollback() 
         print("Error:", str(e))
-        traceback.print_exc()  # Print detailed error trace
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
     finally:
-        db.session.close() 
-
-
-
+        db.session.close()
 
 
         

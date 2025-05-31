@@ -12,6 +12,7 @@ const ClientPage = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(null);
+  const [error, setError] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -64,6 +65,27 @@ const ClientPage = () => {
     const userId = localStorage.getItem('userId');
     if (!userId) return; // Assuming `user` is already fetched
   
+    setError(""); // Clear previous errors
+
+  const usernameRegex = /^[a-zA-Z0-9]{4,10}$/;
+  if (!usernameRegex.test(editedUser.username)) {
+    setError("Username must be 4–10 characters and contain only letters and numbers.");
+    return;
+  }
+ if (editedUser.password.length < 6 || editedUser.password.length > 8) {
+    setError("Password must be between 6 and 8 characters.");
+    return;
+  }
+   // Password complexity validation
+  const hasUpperCase = /[A-Z]/.test(editedUser.password);
+  const hasLowerCase = /[a-z]/.test(editedUser.password);
+  const hasNumber = /[0-9]/.test(editedUser.password);
+  
+  if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+    setError("Password must contain at least one uppercase letter, one lowercase letter, and one number.");
+    return;
+  }
+
     try {
       const response = await fetch(`http://127.0.0.1:5000/site/update_profile/${userId}`, {
         method: 'PUT',
@@ -129,7 +151,7 @@ const ClientPage = () => {
     } else if (phase1 && phase2 && !phase3) {
       return "Foundation, Framing, Mechanical, Electrical, and Plumbing part is finished.";
     } else if (phase1 && phase2 && phase3) {
-      return "Interior and Exterior Finishing part is finished.";
+      return "Interior and Exterior Finishing part is finished. Your Home is Complete";
     }
     return "";
   };
@@ -168,7 +190,7 @@ const ClientPage = () => {
       <div className="flex flex-col gap-6 p-8 bg-Hex1 min-h-screen relative mt-24">
         {/* Top Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Your Project Progress</h1>
+          <h1 className="text-xl mx-16 sm:text-2xl font-bold text-gray-800">Your Home Progress Journey</h1>
         
           {/* Profile Button */}
           {user && (
@@ -216,6 +238,7 @@ const ClientPage = () => {
           <div className="text-sm text-gray-700 space-y-2">
   {isEditing ? (
     <>
+    {error && <p className="text-red-700 text-center">{error}</p>}
       <div>
         <label className="font-medium flex items-center gap-2">
           <Mail className="h-4 w-4" />
@@ -346,21 +369,29 @@ const ClientPage = () => {
         {/* Project Progress Section */}
         <div className="space-y-6">
 
-          {projects.length > 0 ? (
-            projects.map((proj) => {
-              const phaseDescription = getPhaseDescription(proj.phase1, proj.phase2, proj.phase3);
+           {projects.length > 0 ? (
+          projects.map((proj) => {
+            const phaseDescription = getPhaseDescription(proj.phase1, proj.phase2, proj.phase3);
+            const projectInfo = proj.project;
 
               return (
-                <div key={proj.id} className="bg-white rounded shadow p-4 space-y-4 border">
-                  <h2 className="text-lg font-semibold">Progress ID: {proj.id}</h2>
+                <div key={proj.id} className="bg-white rounded mx-16 shadow p-4 space-y-4 border">
+                  <h2 className="text-xl font-bold text-gray-800"></h2>
+                  <h2 className="text-lg font-semibold">Project Name: {proj.project_name}</h2>
 
                   {/* Description and Progress */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <strong>Description:</strong> {proj.description}
+                     <div> <strong>Project Description:</strong> {proj.project_description}</div>
+                     <div> <strong>location:</strong> {proj.location}</div>
+                     <div> <strong>Area:</strong> {proj.area} kare</div>
+                     <div> <strong>Type of Building:</strong> {proj.type_of_building}</div>
+                      
+                      
                       <div><strong>Status:</strong> {proj.status}</div>
                       <div><strong>Updated At:</strong> {proj.updated_at}</div>
                     </div>
+                    <div><strong>Progress Description:</strong> {proj.description}</div>
 
                     {/* Circular Progress Bars */}
                     <div>

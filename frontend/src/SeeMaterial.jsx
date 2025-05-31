@@ -111,7 +111,6 @@ const SeeEmployeeList = () => {
                             <th className="py-2 px-4 border">Unit</th>
                             <th className="py-2 px-4 border">Cost</th>
                             <th className="py-2 px-4 border">P_id</th>
-                            <th className="py-2 px-4 border">site_cont_id</th>
                             <th className="py-2 px-4 border">Actions</th>
                         </tr>
                     </thead>
@@ -194,19 +193,6 @@ const SeeEmployeeList = () => {
                     )}
                 </td>
 
-                  {/* site_cont_id */}
-                  <td className="py-1 px-1 border">
-                    {editId === employee.id ? (
-                        <input
-                            type="number"
-                            value={editedData.site_cont_id || ''}
-                            onChange={(e) => handleChange(e, 'site_cont_id')}
-                            className="border p-1 w-full"
-                        />
-                    ) : (
-                        employee.site_cont_id
-                    )}
-                </td>
 
             
 

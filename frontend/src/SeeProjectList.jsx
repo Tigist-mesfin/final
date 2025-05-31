@@ -87,8 +87,8 @@ const SeeProjectList = () => {
     return (
         <div className="container mx-auto  p-6 overflow-y-auto max-h-screen">
             <h1 className="text-2xl font-bold mb-4">Project List</h1>
-            <div className="overflow-x-auto">
-                <table className="min-w-full bg-white  border-gray-600 shadow-md rounded-lg">
+            <div className=" w-full overflow-x-auto">
+                <table className="min-w-[1200px] bg-white  border-gray-600 shadow-md rounded-lg">
                     <thead className="bg-Hex3">
                         <tr>
                             {['ID', 'Project Name', 'Description', 'Start Date', 'End Date', 'Status', 'Budget', 'Location','TypeOfBuilding','Area','N0 of floors','N0 of roof','Roof type', 'SiteC ID', 'Client ID', 'Actions'].map(header => (
@@ -109,10 +109,10 @@ const SeeProjectList = () => {
                                                         onChange={(e) => handleChange(e, field)}
                                                         className="border p-1 w-full"
                                                     >
-                                                        <option value="Pending">Completed</option>
+                                                        
                                                         <option value="In Progress">In Progress</option>
                                                         <option value="On hold">On hold</option>
-                                                        <option value="Completed">Cancelled</option>
+                                                        <option value="Cancelled">Cancelled</option>
                                                     </select>
                                                 ) : (
                                                 <input

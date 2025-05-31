@@ -95,10 +95,11 @@ class ProjectProgress(db.Model):
     phase1 = db.Column(db.Boolean, default=False)
     phase2 = db.Column(db.Boolean, default=False)
     phase3 = db.Column(db.Boolean, default=False)
-    p_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    p_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=True)
     site_cont_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     image_urls = db.Column(db.JSON)
+   
 
 
 
@@ -121,7 +122,7 @@ class WorkRequest(db.Model):
   
 
     id = db.Column(db.Integer, primary_key=True)
-    location = db.Column(db.String(255), nullable=False)
+    p_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     description_of_works = db.Column(db.Text, nullable=False)
     equipment_machinery = db.Column(db.String(255), nullable=True)
     date_of_inspection = db.Column(db.Date, nullable=False)

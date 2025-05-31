@@ -10,17 +10,18 @@ const Dashboard = () => {
 const [editedUser, setEditedUser] = useState(null); // fix: initialize as null
 const [employees, setEmployees] = useState([]);
 const [deadlineAlerts, setDeadlineAlerts] = useState([]);
+ const [error, setError] = useState("");
 const [showWorkRequestForm, setShowWorkRequestForm] = useState(false);
 
 const navigate = useNavigate();
 
 
 const [formData, setFormData] = useState({
-  location: "",
+  p_id: "",
   description_of_works: "",
   equipment_machinery: "",
   date_of_inspection: "",
-  site_contractor_id: "",
+  site_contractor_id:  localStorage.getItem("userId") || "",
 });
 
 // Handler to update form data state
@@ -52,11 +53,11 @@ const handleSubmit = async (e) => {
       if (response.ok) {
           alert('Request submitted successfully!');
           setFormData({
-            location: "",
+            p_id: "",
             description_of_works: "",
             equipment_machinery: "",
             date_of_inspection: "",
-            site_contractor_id: "",
+            
           });
           
       } else {
@@ -120,7 +121,27 @@ useEffect(() => {
     const handleSave = async () => {
       const userId = localStorage.getItem('userId');
       if (!userId) return; // Assuming `user` is already fetched
-    
+      
+    setError(""); // Clear previous errors
+
+  const usernameRegex = /^[a-zA-Z0-9]{4,10}$/;
+  if (!usernameRegex.test(editedUser.username)) {
+    setError("Username must be 4–10 characters and contain only letters and numbers.");
+    return;
+  }
+ if (editedUser.password.length < 6 || editedUser.password.length > 8) {
+    setError("Password must be between 6 and 8 characters.");
+    return;
+  }
+   // Password complexity validation
+  const hasUpperCase = /[A-Z]/.test(editedUser.password);
+  const hasLowerCase = /[a-z]/.test(editedUser.password);
+  const hasNumber = /[0-9]/.test(editedUser.password);
+  
+  if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+    setError("Password must contain at least one uppercase letter, one lowercase letter, and one number.");
+    return;
+  }
       try {
         const response = await fetch(`http://127.0.0.1:5000/site/update_profile/${userId}`, {
           method: 'PUT',
@@ -219,6 +240,32 @@ const alerts = data.map((project) => {
     fetchProject();
   }, []);
 
+
+
+
+
+     useEffect(() => {
+                const userId = localStorage.getItem("userId");
+                if (!userId) return;
+    
+                const fetchProjects = async () => {
+                    try {
+                    const response = await fetch(`http://127.0.0.1:5000/api/get_projects_by_site_contr/${userId}`
+                    );
+                    const data = await response.json();
+                    setProjects(data);
+                    } catch (error) {
+                    console.error("Error fetching projects:", error);
+                    }
+                };
+    
+                fetchProjects();
+                }, []);
+
+
+
+
+
   return (
     <div className="flex-1 overflow-y-auto max-h-screen  bg-gray-100">
     <div className="flex flex-col gap-6 p-8 bg-gray-100 min-h-screen relative ">
@@ -269,6 +316,7 @@ const alerts = data.map((project) => {
           <div className="text-sm text-gray-700 space-y-2">
   {isEditing ? (
     <>
+     {error && <p className="text-red-700 text-center">{error}</p>}
       <div>
         <label className="font-medium flex items-center gap-2">
           <Mail className="h-4 w-4" />
@@ -371,6 +419,7 @@ const alerts = data.map((project) => {
           <div className="flex gap-3 mt-4">
             {isEditing ? (
               <>
+              
                 <button
                   onClick={handleSave}
                   className="px-6 py-2 ml-28 bg-Hex3 text-black rounded-md"
@@ -441,15 +490,21 @@ const alerts = data.map((project) => {
           
           <form onSubmit={handleSubmit}  className="space-y-4">
           <div>
-          <label className="block text-sm font-medium text-gray-700">Location</label>
-          <input
-            type="text"
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            placeholder="Enter location"
-            className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-          />
+          <label className="block text-sm font-medium text-gray-700">Project</label>
+          <select
+                name="p_id"
+                value={formData.p_id}
+                onChange={handleChange}
+                className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                required
+                >
+                <option value="">Select Project</option>
+                {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                    {project.name} (ID: {project.id})
+                    </option>
+                ))}
+                </select>
         </div>
 
         <div>
@@ -487,17 +542,7 @@ const alerts = data.map((project) => {
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Site_contractor_ID</label>
-          <input
-            type="text"
-            name="site_contractor_id"
-            value={formData.site_contractor_id}
-            onChange={handleChange}
-            placeholder="Enter contractor's name"
-            className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-          />
-        </div>
+       
 
             <button
               type="submit"
